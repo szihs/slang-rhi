@@ -744,13 +744,44 @@ void CommandRecorder::cmdEndRenderPass(const commands::EndRenderPass& cmd)
                 {
                     format = dstView->m_texture->m_format;
                 }
-                m_cmdList->ResolveSubresource(
-                    dstView->m_texture->m_resource.getResource(),
-                    0, // TODO iterate subresources
-                    srcView->m_texture->m_resource.getResource(),
-                    0, // TODO iterate subresources
-                    format
-                );
+
+                // Resolve all subresources specified in the texture views
+                const SubresourceRange& srcRange = srcView->m_desc.subresourceRange;
+                const SubresourceRange& dstRange = dstView->m_desc.subresourceRange;
+                
+                // Get plane information for depth/stencil textures
+                uint32_t planeSlice = getPlaneSlice(format, srcView->m_desc.aspect);
+                
+                // Iterate through all layers and mip levels in the subresource range
+                for (uint32_t layerOffset = 0; layerOffset < srcRange.layerCount; layerOffset++)
+                {
+                    for (uint32_t mipOffset = 0; mipOffset < srcRange.mipCount; mipOffset++)
+                    {
+                        uint32_t srcSubresource = getSubresourceIndex(
+                            srcRange.mip + mipOffset,
+                            srcRange.layer + layerOffset,
+                            planeSlice,
+                            srcView->m_texture->m_desc.mipCount,
+                            srcView->m_texture->m_desc.arrayLength
+                        );
+                        
+                        uint32_t dstSubresource = getSubresourceIndex(
+                            dstRange.mip + mipOffset,
+                            dstRange.layer + layerOffset,
+                            planeSlice,
+                            dstView->m_texture->m_desc.mipCount,
+                            dstView->m_texture->m_desc.arrayLength
+                        );
+
+                        m_cmdList->ResolveSubresource(
+                            dstView->m_texture->m_resource.getResource(),
+                            dstSubresource,
+                            srcView->m_texture->m_resource.getResource(),
+                            srcSubresource,
+                            format
+                        );
+                    }
+                }
             }
         }
     }
