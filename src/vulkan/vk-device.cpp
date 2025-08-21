@@ -1920,7 +1920,9 @@ Result SLANG_MCALL getVKAdapters(std::vector<AdapterInfo>& outAdapters)
                 VkPhysicalDeviceProperties props;
                 api.vkGetPhysicalDeviceProperties(physicalDevice, &props);
                 AdapterInfo info = {};
-                memcpy(info.name, props.deviceName, min(strlen(props.deviceName), sizeof(AdapterInfo::name) - 1));
+                size_t nameLen = min(strlen(props.deviceName), sizeof(AdapterInfo::name) - 1);
+                memcpy(info.name, props.deviceName, nameLen);
+                info.name[nameLen] = '\0';  // Ensure null termination
                 info.vendorID = props.vendorID;
                 info.deviceID = props.deviceID;
                 info.luid = vk::getAdapterLUID(api, physicalDevice);

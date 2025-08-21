@@ -67,7 +67,12 @@ Result ShaderObject::setData(const ShaderOffset& offset, const void* data, Size 
     // that are too large, but we have several test cases that set more data than
     // an object actually stores on several targets...
     //
-    if ((dataOffset + dataSize) >= availableSize)
+    if (dataOffset >= availableSize)
+    {
+        // Offset is beyond buffer bounds, skip the write entirely
+        return SLANG_OK;
+    }
+    if ((dataOffset + dataSize) > availableSize)
     {
         dataSize = availableSize - dataOffset;
     }

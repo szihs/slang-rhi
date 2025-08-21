@@ -78,7 +78,7 @@ public:
         }
         auto freeListNode = freeListHead;
         FreeListNode* prevFreeNode = nullptr;
-        while (freeListNode && freeListNode->Offset < offset + size)
+        while (freeListNode && freeListNode->Offset < offset)
         {
             prevFreeNode = freeListNode;
             freeListNode = freeListNode->next;
